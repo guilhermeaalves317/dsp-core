@@ -10,6 +10,7 @@ cd "$ROOT_DIR"
 CONFIG_FILE="$ROOT_DIR/config/adopter/adopter-config.yaml"
 EXAMPLE_FILE="$ROOT_DIR/config/adopter/adopter-config.yaml.example"
 RER_CONFIG_FILE="$ROOT_DIR/config/adopter/rer-adopter-config.yaml"
+RER_ABOUT_FILE="$ROOT_DIR/config/about/overview.rer.md"
 APPLY="$ROOT_DIR/scripts/apply_adopter_config.py"
 
 print_config_rebuild_hint() {
@@ -47,11 +48,22 @@ print_config_intro() {
 }
 
 apply_rer_configuration() {
+  local about_dest
   if [ ! -f "$RER_CONFIG_FILE" ]; then
     error "RER configuration not found: $RER_CONFIG_FILE"
     exit 1
   fi
+  if [ ! -f "$RER_ABOUT_FILE" ]; then
+    error "RER About page not found: $RER_ABOUT_FILE"
+    exit 1
+  fi
   cp "$RER_CONFIG_FILE" "$CONFIG_FILE"
+  # The preset names overview.rer.md, and the generator only accepts that file
+  # when it is already in the backend about directory. The wizard copies it;
+  # this path does not, so copy it before generating.
+  about_dest="$(dsp_backend_config_dir)/about"
+  mkdir -p "$about_dest"
+  cp "$RER_ABOUT_FILE" "$about_dest/$(basename "$RER_ABOUT_FILE")"
   python3 "$APPLY" --root "$ROOT_DIR" --config "$CONFIG_FILE"
   echo ""
   echo "The RER configuration is already correct. No further changes are required."
